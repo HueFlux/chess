@@ -1,5 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include "chess_board.hpp"
+#include "piece.hpp"
 
 // Function used to maintain the view aspect ratio as the window size changes
 sf::View getLetterboxView(sf::View view, int windowWidth, int windowHeight);
