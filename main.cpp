@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include "chess_board.hpp"
 #include "piece.hpp"
+#include <iostream>
 
 // Function used to maintain the view aspect ratio as the window size changes
 sf::View getLetterboxView(sf::View view, int windowWidth, int windowHeight);
@@ -20,6 +21,7 @@ int main() {
 
     // Create chess board
     ChessBoard board(res_x);
+    bool mouse_pressed = false;
 
     while (window.isOpen()) {
         sf::Event event;
@@ -32,10 +34,29 @@ int main() {
                 case sf::Event::Resized:
                     view = getLetterboxView(view, event.size.width, event.size.height);
                     break;
+                case sf::Event::MouseButtonPressed:
+                    if (event.mouseButton.button == sf::Mouse::Button::Left) {
+                        std::cout << "Mouse pressed.\n";
+                        mouse_pressed = true;
+                        board.selectPiece(sf::Mouse::getPosition(window));
+                    }
+                    break;
+                case sf::Event::MouseButtonReleased:
+                    if (event.mouseButton.button == sf::Mouse::Button::Left) {
+                        std::cout << "Mouse released.\n";
+                        mouse_pressed = false;
+                    }
+                    break;
                 default:
                     break;
             }
          }
+
+         if (mouse_pressed) {
+             // std::cout << "Mouse pressed.\n";
+             board.updateSelectedPiecePosition(sf::Mouse::getPosition(window));
+         }
+
          window.clear();
          window.setView(view);
          window.draw(board);
