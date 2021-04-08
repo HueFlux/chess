@@ -175,7 +175,7 @@ void ChessBoard::loadPositionFromFEN(const std::string& fen) {
 
 }
 
-void ChessBoard::selectPiece(const sf::Vector2i& mouse_position) {
+void ChessBoard::selectPiece(const sf::Vector2f& mouse_position) {
     float relative_x = mouse_position.x - board_origin.x;
     float relative_y = mouse_position.y - board_origin.y;
     selected_piece_v_index = -1;
@@ -206,7 +206,7 @@ void ChessBoard::selectPiece(const sf::Vector2i& mouse_position) {
     selected_piece_type = square[file][rank].type;
 }
 
-void ChessBoard::updateSelectedPiecePosition(const sf::Vector2i& new_position) {
+void ChessBoard::updateSelectedPiecePosition(const sf::Vector2f& new_position) {
     int file = selected_piece.x;
     int rank = selected_piece.y;
 

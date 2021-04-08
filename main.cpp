@@ -38,7 +38,7 @@ int main() {
                     if (event.mouseButton.button == sf::Mouse::Button::Left) {
                         std::cout << "Mouse pressed.\n";
                         mouse_pressed = true;
-                        board.selectPiece(sf::Mouse::getPosition(window));
+                        board.selectPiece(window.mapPixelToCoords(sf::Mouse::getPosition(window)));
                     }
                     break;
                 case sf::Event::MouseButtonReleased:
@@ -54,7 +54,7 @@ int main() {
 
          if (mouse_pressed) {
              // std::cout << "Mouse pressed.\n";
-             board.updateSelectedPiecePosition(sf::Mouse::getPosition(window));
+             board.updateSelectedPiecePosition(window.mapPixelToCoords(sf::Mouse::getPosition(window)));
          }
 
          window.clear();

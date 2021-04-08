@@ -20,9 +20,9 @@ class ChessBoard : public sf::Drawable {
         // Method load a board position using FEN
         void loadPositionFromFEN(const std::string& fen);
         // Method used to find and select piece under the mouse
-        void selectPiece(const sf::Vector2i& mouse_position);
+        void selectPiece(const sf::Vector2f& mouse_position);
         // Method used to update position of selected piece to mouse position
-        void updateSelectedPiecePosition(const sf::Vector2i& new_position);
+        void updateSelectedPiecePosition(const sf::Vector2f& new_position);
 
     private:
         // 2D array containing the RectangleShapes for each board square
