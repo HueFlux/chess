@@ -23,6 +23,7 @@ class ChessBoard : public sf::Drawable {
         void selectPiece(const sf::Vector2f& mouse_position);
         // Method used to update position of selected piece to mouse position
         void updateSelectedPiecePosition(const sf::Vector2f& new_position);
+        void dropPiece(const sf::Vector2f& mouse_position);
 
     private:
         // 2D array containing the RectangleShapes for each board square
@@ -45,10 +46,10 @@ class ChessBoard : public sf::Drawable {
         sf::Texture piece_textures;
         // Size of a single piece sprite in pixels
         int sprite_size;
-
+        // King sprites
         sf::Sprite white_king;
         sf::Sprite black_king;
-        // Vectors containing the Sprites for each type of piece
+        // Vectors containing the Sprites for every other type of piece
         std::vector <sf::Sprite> white_pawns;
         std::vector <sf::Sprite> black_pawns;
         std::vector <sf::Sprite> white_knights;
