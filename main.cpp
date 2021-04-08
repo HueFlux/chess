@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include "chess_board.hpp"
 #include "piece.hpp"
 #include <iostream>

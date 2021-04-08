@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 project(chess VERSION 1.0)
 
-find_package(SFML 2.5 COMPONENTS system window graphics REQUIRED)
+find_package(SFML 2.5 COMPONENTS system window graphics audio REQUIRED)
 
 add_executable(chess src/chess_board.cpp
                      main.cpp)
@@ -16,4 +16,4 @@ target_compile_options(chess
                        $<$<CXX_COMPILER_ID:MSVC>:/W3 /permissive- /TP>
                        $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra>)
 
-target_link_libraries(chess sfml-graphics)
+target_link_libraries(chess sfml-graphics sfml-audio)

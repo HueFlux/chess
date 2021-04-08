@@ -2,6 +2,7 @@
 #define CHESS_BOARD_HPP
 
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include "piece.hpp"
 #include <array>
 #include <vector>
@@ -14,7 +15,7 @@ class ChessBoard : public sf::Drawable {
 
         virtual ~ChessBoard();
 
-        // Color objects for light, dark and hightlight square colors
+        // Color objects for light, dark and highlight square colors
         static inline const sf::Color light{240, 217, 181};
         static inline const sf::Color dark{148, 111, 81};
         static inline const sf::Color highlight{155, 199, 0, 104};
@@ -74,6 +75,10 @@ class ChessBoard : public sf::Drawable {
         //      pieces[8] : white queens
         //      pieces[9] : black queens
         std::array<std::vector<sf::Sprite>, 10> pieces;
+
+        std::array<sf::SoundBuffer, 2> sound_buffers;
+        sf::Sound move_sound;
+        sf::Sound capture_sound;
 
 
         // Overridden draw method to draw CubeFace to the RenderTarget

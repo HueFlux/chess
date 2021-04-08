@@ -1,4 +1,6 @@
 #include "chess_board.hpp"
+#include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include "piece.hpp"
 #include <iostream>
 #include <string>
@@ -16,11 +18,23 @@ ChessBoard::ChessBoard(float board_size, float x, float y) :
     selected_sprite(sf::Vector2i(-1, -1)),
     move_count(0)
 {
+    // Load piece textures
     if (!piece_textures.loadFromFile("../res/pieces/maestro/maestro_pieces.png")) {
         std::cout << "Load failed" << std::endl;
         system("pause");
     }
     piece_textures.setSmooth(true);
+    // Load sound files
+    if (!sound_buffers[0].loadFromFile("../res/sounds/move.ogg")) {
+        std::cout << "Load failed" << std::endl;
+        system("pause");
+    }
+    move_sound.setBuffer(sound_buffers[0]);
+    if (!sound_buffers[1].loadFromFile("../res/sounds/capture.ogg")) {
+        std::cout << "Load failed" << std::endl;
+        system("pause");
+    }
+    capture_sound.setBuffer(sound_buffers[1]);
 
     loadPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
@@ -274,6 +288,7 @@ void ChessBoard::dropPiece(const sf::Vector2f& mouse_position) {
         updateSelectedPiecePosition(new_position);
         square[file][rank] = square[selected_piece.x][selected_piece.y];
         square[selected_piece.x][selected_piece.y].type = Piece::Type::None;
+        move_sound.play();
     }
     else if (square[file][rank].color != active_color) {
         sf::Vector2f new_position(square_size.x * file + square_size.x/2,
@@ -283,6 +298,7 @@ void ChessBoard::dropPiece(const sf::Vector2f& mouse_position) {
         pieces[captured_sprite.x].erase(pieces[captured_sprite.x].begin() + captured_sprite.y);
         square[file][rank] = square[selected_piece.x][selected_piece.y];
         square[selected_piece.x][selected_piece.y].type = Piece::Type::None;
+        capture_sound.play();
     }
 
     selected_piece.x = selected_piece.y = -1;
