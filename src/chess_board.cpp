@@ -13,7 +13,8 @@ ChessBoard::ChessBoard(float board_size, float x, float y) :
     sprite_size(189),
     selected_piece_type(Piece::Type::None),
     selected_piece(sf::Vector2i(-1, -1)),
-    selected_sprite(sf::Vector2i(-1, -1))
+    selected_sprite(sf::Vector2i(-1, -1)),
+    move_count(0)
 {
     if (!piece_textures.loadFromFile("../res/pieces/maestro/maestro_pieces.png")) {
         std::cout << "Load failed" << std::endl;
@@ -22,6 +23,13 @@ ChessBoard::ChessBoard(float board_size, float x, float y) :
     piece_textures.setSmooth(true);
 
     loadPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+
+    for (sf::RectangleShape& square : last_move) {
+        square.setSize(square_size);
+        square.setFillColor(highlight);
+    }
+    selected_square.setSize(square_size);
+    selected_square.setFillColor(highlight);
 
     for (int file = 0; file < square_rectangles.size(); file++) {
         for (int rank = 0; rank < square_rectangles.size(); rank++) {
@@ -188,7 +196,7 @@ void ChessBoard::selectPiece(const sf::Vector2f& mouse_position) {
     }
     int file = static_cast<int> (relative_x / square_size.x);
     int rank = static_cast<int> (relative_y / square_size.y);
-
+    //
     if (square[file][rank].type == Piece::Type::None) {
         selected_piece.x = selected_piece.y = -1;
         selected_piece_type = Piece::Type::None;
@@ -205,6 +213,9 @@ void ChessBoard::selectPiece(const sf::Vector2f& mouse_position) {
     selected_piece.x = file;
     selected_piece.y = rank;
     selected_piece_type = square[file][rank].type;
+
+    selected_square.setPosition(board_origin.x + square_size.x * file,
+                                board_origin.y + square_size.y * rank);
 }
 
 void ChessBoard::updateSelectedPiecePosition(const sf::Vector2f& new_position) {
@@ -278,6 +289,11 @@ void ChessBoard::dropPiece(const sf::Vector2f& mouse_position) {
     selected_piece_type = Piece::Type::None;
     selected_sprite.x = selected_sprite.y = -1;
     active_color = (active_color == Piece::Color::White) ? Piece::Color::Black : Piece::Color::White;
+    move_count++;
+
+    last_move[0].setPosition(selected_square.getPosition());
+    last_move[1].setPosition(board_origin.x + square_size.x * file,
+                             board_origin.y + square_size.y * rank);
 }
 
 sf::Vector2i ChessBoard::findPieceSprite(int file, int rank) {
@@ -400,11 +416,22 @@ sf::Vector2i ChessBoard::findPieceSprite(int file, int rank) {
 }
 
 void ChessBoard::draw(sf::RenderTarget &renderTarget, sf::RenderStates renderStates) const {
+    // Draw board
     for (int file = 0; file < square_rectangles.size(); file++) {
         for (int rank = 0; rank < square_rectangles.size(); rank++) {
             renderTarget.draw(square_rectangles[file][rank]);
         }
     }
+    // Draw highlight squares
+    if (selected_piece.x != -1 && selected_piece.y != -1) {
+        renderTarget.draw(selected_square);
+    }
+    if (move_count > 0) {
+        for (const auto& square : last_move) {
+            renderTarget.draw(square);
+        }
+    }
+
     // Draw pieces
     renderTarget.draw(white_king);
     renderTarget.draw(black_king);

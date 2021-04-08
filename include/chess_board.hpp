@@ -14,9 +14,10 @@ class ChessBoard : public sf::Drawable {
 
         virtual ~ChessBoard();
 
-        // Color objects for light and dark square colors
+        // Color objects for light, dark and hightlight square colors
         static inline const sf::Color light{240, 217, 181};
         static inline const sf::Color dark{148, 111, 81};
+        static inline const sf::Color highlight{155, 199, 0, 104};
         // Method load a board position using FEN
         void loadPositionFromFEN(const std::string& fen);
         // Method used to find and select piece under the mouse
@@ -41,6 +42,7 @@ class ChessBoard : public sf::Drawable {
         Piece square[8][8];
         // Current color to move
         Piece::Color active_color;
+        int move_count;
         // Contains the file and rank of currently selected piece
         // (-1, -1) if no piece has been selected
         sf::Vector2i selected_piece;
@@ -48,6 +50,10 @@ class ChessBoard : public sf::Drawable {
         // Contains the indices of the sprite in pieces array
         // corresponding to the selected piece
         sf::Vector2i selected_sprite;
+        // RectangleShapes used to hightlight squares from the last move
+        std::array<sf::RectangleShape, 2> last_move;
+        // RectangleShape used to hightlight the selected square
+        sf::RectangleShape selected_square;
         // Texture to hold piece set sprite sheet
         sf::Texture piece_textures;
         // Size of a single piece sprite in pixels
