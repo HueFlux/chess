@@ -12,8 +12,8 @@ ChessBoard::ChessBoard(float board_size, float x, float y) :
     square_size(sf::Vector2f(board_size / 8, board_size / 8)),
     sprite_size(189),
     selected_piece_type(Piece::Type::None),
-    selected_piece_v_index(-1),
-    selected_piece(sf::Vector2i(-1, -1))
+    selected_piece(sf::Vector2i(-1, -1)),
+    selected_sprite(sf::Vector2i(-1, -1))
 {
     if (!piece_textures.loadFromFile("../res/pieces/maestro/maestro_pieces.png")) {
         std::cout << "Load failed" << std::endl;
@@ -67,51 +67,51 @@ ChessBoard::ChessBoard(float board_size, float x, float y) :
                 if (square[file][rank].type == Piece::Type::Pawn) {
                     if (square[file][rank].color == Piece::Color::White) {
                         piece.setTextureRect(sf::IntRect(sprite_size * 3, sprite_size, sprite_size, sprite_size));
-                        white_pawns.push_back(piece);
+                        pieces[0].push_back(piece);
                     }
                     else {
                         piece.setTextureRect(sf::IntRect(sprite_size * 3, 0, sprite_size, sprite_size));
-                        black_pawns.push_back(piece);
+                        pieces[1].push_back(piece);
                     }
                 }
                 else if (square[file][rank].type == Piece::Type::Knight) {
                     if (square[file][rank].color == Piece::Color::White) {
                         piece.setTextureRect(sf::IntRect(sprite_size * 2, sprite_size, sprite_size, sprite_size));
-                        white_knights.push_back(piece);
+                        pieces[2].push_back(piece);
                     }
                     else {
                         piece.setTextureRect(sf::IntRect(sprite_size * 2, 0, sprite_size, sprite_size));
-                        black_knights.push_back(piece);
+                        pieces[3].push_back(piece);
                     }
                 }
                 else if (square[file][rank].type == Piece::Type::Bishop) {
                     if (square[file][rank].color == Piece::Color::White) {
                         piece.setTextureRect(sf::IntRect(0, sprite_size, sprite_size, sprite_size));
-                        white_bishops.push_back(piece);
+                        pieces[4].push_back(piece);
                     }
                     else {
                         piece.setTextureRect(sf::IntRect(0, 0, sprite_size, sprite_size));
-                        black_bishops.push_back(piece);
+                        pieces[5].push_back(piece);
                     }
                 }
                 else if (square[file][rank].type == Piece::Type::Rook) {
                     if (square[file][rank].color == Piece::Color::White) {
                         piece.setTextureRect(sf::IntRect(sprite_size * 5, sprite_size, sprite_size, sprite_size));
-                        white_rooks.push_back(piece);
+                        pieces[6].push_back(piece);
                     }
                     else {
                         piece.setTextureRect(sf::IntRect(sprite_size * 5, 0, sprite_size, sprite_size));
-                        black_rooks.push_back(piece);
+                        pieces[7].push_back(piece);
                     }
                 }
                 else {
                     if (square[file][rank].color == Piece::Color::White) {
                         piece.setTextureRect(sf::IntRect(sprite_size * 4, sprite_size, sprite_size, sprite_size));
-                        white_queens.push_back(piece);
+                        pieces[8].push_back(piece);
                     }
                     else {
                         piece.setTextureRect(sf::IntRect(sprite_size * 4, 0, sprite_size, sprite_size));
-                        black_queens.push_back(piece);
+                        pieces[9].push_back(piece);
                     }
                 }
             }
@@ -178,7 +178,7 @@ void ChessBoard::loadPositionFromFEN(const std::string& fen) {
 void ChessBoard::selectPiece(const sf::Vector2f& mouse_position) {
     float relative_x = mouse_position.x - board_origin.x;
     float relative_y = mouse_position.y - board_origin.y;
-    selected_piece_v_index = -1;
+    selected_sprite.x = selected_sprite.y = -1;
     // Check if mouse is inside board
     if (relative_x > board_size || relative_y > board_size ||
         relative_x < 0 || relative_y < 0) {
@@ -223,187 +223,13 @@ void ChessBoard::updateSelectedPiecePosition(const sf::Vector2f& new_position) {
             black_king.setPosition(new_position.x - square_size.x/2,
                                    new_position.y - square_size.y/2);
         }
+        return;
     }
-    else if (square[file][rank].type == Piece::Type::Pawn) {
-        if (square[file][rank].color == Piece::Color::White) {
-            if (selected_piece_v_index != -1) {
-                white_pawns[selected_piece_v_index].setPosition(new_position.x - square_size.x/2,
-                                                                new_position.y - square_size.y/2);
-            }
-            else {
-                for (int i = 0; i < white_pawns.size(); i++) {
-                    if (static_cast<int> (white_pawns[i].getPosition().x) / square_size.x == file &&
-                            static_cast<int> (white_pawns[i].getPosition().y) / square_size.y == rank) {
-                        white_pawns[i].setPosition(new_position.x - square_size.x/2,
-                                                   new_position.y - square_size.y/2);
-                        selected_piece_v_index = i;
-                        break;
-                    }
-                }
-            }
-        }
-        else {
-            if (selected_piece_v_index != -1) {
-                black_pawns[selected_piece_v_index].setPosition(new_position.x - square_size.x/2,
-                                                                new_position.y - square_size.y/2);
-            }
-            else {
-                for (int i = 0; i < black_pawns.size(); i++) {
-                    if (static_cast<int> (black_pawns[i].getPosition().x) / square_size.x == file &&
-                            static_cast<int> (black_pawns[i].getPosition().y) / square_size.y == rank) {
-                        black_pawns[i].setPosition(new_position.x - square_size.x/2,
-                                                   new_position.y - square_size.y/2);
-                        selected_piece_v_index = i;
-                        break;
-                    }
-                }
-            }
-        }
+    if (selected_sprite.x == -1 && selected_sprite.y == -1) {
+        selected_sprite = findPieceSprite(file, rank);
     }
-    else if (square[file][rank].type == Piece::Type::Knight) {
-        if (square[file][rank].color == Piece::Color::White) {
-            if (selected_piece_v_index != -1) {
-                white_knights[selected_piece_v_index].setPosition(new_position.x - square_size.x/2,
-                                                                  new_position.y - square_size.y/2);
-            }
-            else {
-                for (int i = 0; i < white_knights.size(); i++) {
-                    if (static_cast<int> (white_knights[i].getPosition().x) / square_size.x == file &&
-                            static_cast<int> (white_knights[i].getPosition().y) / square_size.y == rank) {
-                        white_knights[i].setPosition(new_position.x - square_size.x/2,
-                                                     new_position.y - square_size.y/2);
-                        selected_piece_v_index = i;
-                        break;
-                    }
-                }
-            }
-        }
-        else {
-            if (selected_piece_v_index != -1) {
-                black_knights[selected_piece_v_index].setPosition(new_position.x - square_size.x/2,
-                                                                  new_position.y - square_size.y/2);
-            }
-            else {
-                for (int i = 0; i < black_knights.size(); i++) {
-                    if (static_cast<int> (black_knights[i].getPosition().x) / square_size.x == file &&
-                            static_cast<int> (black_knights[i].getPosition().y) / square_size.y == rank) {
-                        black_knights[i].setPosition(new_position.x - square_size.x/2,
-                                                     new_position.y - square_size.y/2);
-                        selected_piece_v_index = i;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    else if (square[file][rank].type == Piece::Type::Bishop) {
-        if (square[file][rank].color == Piece::Color::White) {
-            if (selected_piece_v_index != -1) {
-                white_bishops[selected_piece_v_index].setPosition(new_position.x - square_size.x/2,
-                                                                  new_position.y - square_size.y/2);
-            }
-            else {
-                for (int i = 0; i < white_bishops.size(); i++) {
-                    if (static_cast<int> (white_bishops[i].getPosition().x) / square_size.x == file &&
-                            static_cast<int> (white_bishops[i].getPosition().y) / square_size.y == rank) {
-                        white_bishops[i].setPosition(new_position.x - square_size.x/2,
-                                                     new_position.y - square_size.y/2);
-                        selected_piece_v_index = i;
-                        break;
-                    }
-                }
-            }
-        }
-        else {
-            if (selected_piece_v_index != -1) {
-                black_bishops[selected_piece_v_index].setPosition(new_position.x - square_size.x/2,
-                                                                  new_position.y - square_size.y/2);
-            }
-            else {
-                for (int i = 0; i < black_bishops.size(); i++) {
-                    if (static_cast<int> (black_bishops[i].getPosition().x) / square_size.x == file &&
-                            static_cast<int> (black_bishops[i].getPosition().y) / square_size.y == rank) {
-                        black_bishops[i].setPosition(new_position.x - square_size.x/2,
-                                                     new_position.y - square_size.y/2);
-                        selected_piece_v_index = i;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    else if (square[file][rank].type == Piece::Type::Rook) {
-        if (square[file][rank].color == Piece::Color::White) {
-            if (selected_piece_v_index != -1) {
-                white_rooks[selected_piece_v_index].setPosition(new_position.x - square_size.x/2,
-                                                                new_position.y - square_size.y/2);
-            }
-            else {
-                for (int i = 0; i < white_rooks.size(); i++) {
-                    if (static_cast<int> (white_rooks[i].getPosition().x) / square_size.x == file &&
-                            static_cast<int> (white_rooks[i].getPosition().y) / square_size.y == rank) {
-                        white_rooks[i].setPosition(new_position.x - square_size.x/2,
-                                                   new_position.y - square_size.y/2);
-                        selected_piece_v_index = i;
-                        break;
-                    }
-                }
-            }
-        }
-        else {
-            if (selected_piece_v_index != -1) {
-                black_rooks[selected_piece_v_index].setPosition(new_position.x - square_size.x/2,
-                                                                new_position.y - square_size.y/2);
-            }
-            else {
-                for (int i = 0; i < black_rooks.size(); i++) {
-                    if (static_cast<int> (black_rooks[i].getPosition().x) / square_size.x == file &&
-                            static_cast<int> (black_rooks[i].getPosition().y) / square_size.y == rank) {
-                        black_rooks[i].setPosition(new_position.x - square_size.x/2,
-                                                   new_position.y - square_size.y/2);
-                        selected_piece_v_index = i;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    else {
-        if (square[file][rank].color == Piece::Color::White) {
-            if (selected_piece_v_index != -1) {
-                white_queens[selected_piece_v_index].setPosition(new_position.x - square_size.x/2,
-                                                                 new_position.y - square_size.y/2);
-            }
-            else {
-                for (int i = 0; i < white_queens.size(); i++) {
-                    if (static_cast<int> (white_queens[i].getPosition().x) / square_size.x == file &&
-                            static_cast<int> (white_queens[i].getPosition().y) / square_size.y == rank) {
-                        white_queens[i].setPosition(new_position.x - square_size.x/2,
-                                                    new_position.y - square_size.y/2);
-                        selected_piece_v_index = i;
-                        break;
-                    }
-                }
-            }
-        }
-        else {
-            if (selected_piece_v_index != -1) {
-                black_queens[selected_piece_v_index].setPosition(new_position.x - square_size.x/2,
-                                                                 new_position.y - square_size.y/2);
-            }
-            else {
-                for (int i = 0; i < black_queens.size(); i++) {
-                    if (static_cast<int> (black_queens[i].getPosition().x) / square_size.x == file &&
-                            static_cast<int> (black_queens[i].getPosition().y) / square_size.y == rank) {
-                        black_queens[i].setPosition(new_position.x - square_size.x/2,
-                                                    new_position.y - square_size.y/2);
-                        selected_piece_v_index = i;
-                        break;
-                    }
-                }
-            }
-        }
-    }
+    pieces[selected_sprite.x][selected_sprite.y].setPosition(new_position.x - square_size.x/2,
+                                                             new_position.y - square_size.y/2);
 }
 
 void ChessBoard::dropPiece(const sf::Vector2f& mouse_position) {
@@ -417,15 +243,17 @@ void ChessBoard::dropPiece(const sf::Vector2f& mouse_position) {
     int file = static_cast<int> (relative_x / square_size.x);
     int rank = static_cast<int> (relative_y / square_size.y);
     // Mouse is outside of board or on another piece of the same color
+    // or the opponent's king
     if (relative_x > board_size || relative_y > board_size ||
         relative_x < 0 || relative_y < 0 ||
-        (square[file][rank].type != Piece::Type::None && square[file][rank].color == active_color)) {
+        (square[file][rank].type != Piece::Type::None && square[file][rank].color == active_color) ||
+         square[file][rank].type == Piece::Type::King) {
         sf::Vector2f original_position(square_size.x * selected_piece.x + square_size.x/2,
                                        square_size.y * selected_piece.y + square_size.y/2);
         updateSelectedPiecePosition(original_position);
         selected_piece.x = selected_piece.y = -1;
         selected_piece_type = Piece::Type::None;
-        selected_piece_v_index = -1;
+        selected_sprite.x = selected_sprite.y = -1;
         return;
     }
 
@@ -437,18 +265,138 @@ void ChessBoard::dropPiece(const sf::Vector2f& mouse_position) {
         square[selected_piece.x][selected_piece.y].type = Piece::Type::None;
     }
     else if (square[file][rank].color != active_color) {
-        // TODO: Add logic for capture
         sf::Vector2f new_position(square_size.x * file + square_size.x/2,
                                   square_size.y * rank + square_size.y/2);
         updateSelectedPiecePosition(new_position);
+        sf::Vector2i captured_sprite = findPieceSprite(file, rank);
+        pieces[captured_sprite.x].erase(pieces[captured_sprite.x].begin() + captured_sprite.y);
         square[file][rank] = square[selected_piece.x][selected_piece.y];
         square[selected_piece.x][selected_piece.y].type = Piece::Type::None;
     }
 
     selected_piece.x = selected_piece.y = -1;
     selected_piece_type = Piece::Type::None;
-    selected_piece_v_index = -1;
+    selected_sprite.x = selected_sprite.y = -1;
     active_color = (active_color == Piece::Color::White) ? Piece::Color::Black : Piece::Color::White;
+}
+
+sf::Vector2i ChessBoard::findPieceSprite(int file, int rank) {
+    sf::Vector2i indices(-1, -1);
+    if (file < 0 || file > 7 || rank < 0 || rank > 7) {
+        return indices;
+    }
+    // std::cout << "Hello\n";
+    if (square[file][rank].type == Piece::Type::Pawn) {
+        if (square[file][rank].color == Piece::Color::White) {
+            indices.x = 0;
+            for (int i = 0; i < pieces[0].size(); i++) {
+                if (static_cast<int> (pieces[0][i].getPosition().x) / square_size.x == file &&
+                        static_cast<int> (pieces[0][i].getPosition().y) / square_size.y == rank) {
+                    indices.y = i;
+                    break;
+                }
+            }
+        }
+        else {
+            indices.x = 1;
+            for (int i = 0; i < pieces[1].size(); i++) {
+                if (static_cast<int> (pieces[1][i].getPosition().x) / square_size.x == file &&
+                        static_cast<int> (pieces[1][i].getPosition().y) / square_size.y == rank) {
+                    indices.y = i;
+                    break;
+                }
+            }
+        }
+    }
+    else if (square[file][rank].type == Piece::Type::Knight) {
+        if (square[file][rank].color == Piece::Color::White) {
+            indices.x = 2;
+            for (int i = 0; i < pieces[2].size(); i++) {
+                if (static_cast<int> (pieces[2][i].getPosition().x) / square_size.x == file &&
+                        static_cast<int> (pieces[2][i].getPosition().y) / square_size.y == rank) {
+                    indices.y = i;
+                    break;
+                }
+            }
+        }
+        else {
+            indices.x = 3;
+            for (int i = 0; i < pieces[3].size(); i++) {
+                if (static_cast<int> (pieces[3][i].getPosition().x) / square_size.x == file &&
+                        static_cast<int> (pieces[3][i].getPosition().y) / square_size.y == rank) {
+                    indices.y = i;
+                    break;
+                }
+            }
+        }
+    }
+    else if (square[file][rank].type == Piece::Type::Bishop) {
+        if (square[file][rank].color == Piece::Color::White) {
+            indices.x = 4;
+            for (int i = 0; i < pieces[4].size(); i++) {
+                if (static_cast<int> (pieces[4][i].getPosition().x) / square_size.x == file &&
+                        static_cast<int> (pieces[4][i].getPosition().y) / square_size.y == rank) {
+                    indices.y = i;
+                    break;
+                }
+            }
+        }
+        else {
+            indices.x = 5;
+            for (int i = 0; i < pieces[5].size(); i++) {
+                if (static_cast<int> (pieces[5][i].getPosition().x) / square_size.x == file &&
+                        static_cast<int> (pieces[5][i].getPosition().y) / square_size.y == rank) {
+                    indices.y = i;
+                    break;
+                }
+            }
+        }
+    }
+    else if (square[file][rank].type == Piece::Type::Rook) {
+        if (square[file][rank].color == Piece::Color::White) {
+            indices.x = 6;
+            for (int i = 0; i < pieces[6].size(); i++) {
+                if (static_cast<int> (pieces[6][i].getPosition().x) / square_size.x == file &&
+                        static_cast<int> (pieces[6][i].getPosition().y) / square_size.y == rank) {
+                    indices.y = i;
+                    break;
+                }
+            }
+        }
+        else {
+            indices.x = 7;
+            for (int i = 0; i < pieces[7].size(); i++) {
+                if (static_cast<int> (pieces[7][i].getPosition().x) / square_size.x == file &&
+                        static_cast<int> (pieces[7][i].getPosition().y) / square_size.y == rank) {
+                    indices.y = i;
+                    break;
+                }
+            }
+        }
+    }
+    else {
+        if (square[file][rank].color == Piece::Color::White) {
+            indices.x = 8;
+            for (int i = 0; i < pieces[8].size(); i++) {
+                if (static_cast<int> (pieces[8][i].getPosition().x) / square_size.x == file &&
+                        static_cast<int> (pieces[8][i].getPosition().y) / square_size.y == rank) {
+                    indices.y = i;
+                    break;
+                }
+            }
+        }
+        else {
+            indices.x = 9;
+            for (int i = 0; i < pieces[9].size(); i++) {
+                if (static_cast<int> (pieces[9][i].getPosition().x) / square_size.x == file &&
+                        static_cast<int> (pieces[9][i].getPosition().y) / square_size.y == rank) {
+                    indices.y = i;
+                    break;
+                }
+            }
+        }
+    }
+    return indices;
 }
 
 void ChessBoard::draw(sf::RenderTarget &renderTarget, sf::RenderStates renderStates) const {
@@ -461,34 +409,15 @@ void ChessBoard::draw(sf::RenderTarget &renderTarget, sf::RenderStates renderSta
     renderTarget.draw(white_king);
     renderTarget.draw(black_king);
 
-    for (const sf::Sprite& s : white_pawns) {
-        renderTarget.draw(s);
+    for (int i = 0; i < pieces.size(); i++) {
+        for (int j = 0; j < pieces[i].size(); j++) {
+            if (i == selected_sprite.x && j == selected_sprite.y) {
+                continue;
+            }
+            renderTarget.draw(pieces[i][j]);
+        }
     }
-    for (const sf::Sprite& s : black_pawns) {
-        renderTarget.draw(s);
-    }
-    for (const sf::Sprite& s : white_knights) {
-        renderTarget.draw(s);
-    }
-    for (const sf::Sprite& s : black_knights) {
-        renderTarget.draw(s);
-    }
-    for (const sf::Sprite& s : white_bishops) {
-        renderTarget.draw(s);
-    }
-    for (const sf::Sprite& s : black_bishops) {
-        renderTarget.draw(s);
-    }
-    for (const sf::Sprite& s : white_rooks) {
-        renderTarget.draw(s);
-    }
-    for (const sf::Sprite& s : black_rooks) {
-        renderTarget.draw(s);
-    }
-    for (const sf::Sprite& s : white_queens) {
-        renderTarget.draw(s);
-    }
-    for (const sf::Sprite& s : black_queens) {
-        renderTarget.draw(s);
+    if (selected_sprite.x != -1 && selected_sprite.y != -1) {
+        renderTarget.draw(pieces[selected_sprite.x][selected_sprite.y]);
     }
 }

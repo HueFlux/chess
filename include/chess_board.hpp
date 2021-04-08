@@ -23,7 +23,11 @@ class ChessBoard : public sf::Drawable {
         void selectPiece(const sf::Vector2f& mouse_position);
         // Method used to update position of selected piece to mouse position
         void updateSelectedPiecePosition(const sf::Vector2f& new_position);
+        // Method used to update board after dropping a piece
         void dropPiece(const sf::Vector2f& mouse_position);
+        // Method used to find the indices of a piece's corresponding
+        // sprite in the pieces array
+        sf::Vector2i findPieceSprite(int file, int rank);
 
     private:
         // 2D array containing the RectangleShapes for each board square
@@ -41,7 +45,9 @@ class ChessBoard : public sf::Drawable {
         // (-1, -1) if no piece has been selected
         sf::Vector2i selected_piece;
         Piece::Type selected_piece_type;
-        int selected_piece_v_index;
+        // Contains the indices of the sprite in pieces array
+        // corresponding to the selected piece
+        sf::Vector2i selected_sprite;
         // Texture to hold piece set sprite sheet
         sf::Texture piece_textures;
         // Size of a single piece sprite in pixels
@@ -49,17 +55,20 @@ class ChessBoard : public sf::Drawable {
         // King sprites
         sf::Sprite white_king;
         sf::Sprite black_king;
-        // Vectors containing the Sprites for every other type of piece
-        std::vector <sf::Sprite> white_pawns;
-        std::vector <sf::Sprite> black_pawns;
-        std::vector <sf::Sprite> white_knights;
-        std::vector <sf::Sprite> black_knights;
-        std::vector <sf::Sprite> white_bishops;
-        std::vector <sf::Sprite> black_bishops;
-        std::vector <sf::Sprite> white_rooks;
-        std::vector <sf::Sprite> black_rooks;
-        std::vector <sf::Sprite> white_queens;
-        std::vector <sf::Sprite> black_queens;
+        // Array of vectors containing the Sprites for every other type of piece
+        // Structure is:
+        //      pieces[0] : white pawns
+        //      pieces[1] : black pawns
+        //      pieces[2] : white knights
+        //      pieces[3] : black knights
+        //      pieces[4] : white bishops
+        //      pieces[5] : black bishops
+        //      pieces[6] : white rooks
+        //      pieces[7] : black rooks
+        //      pieces[8] : white queens
+        //      pieces[9] : black queens
+        std::array<std::vector<sf::Sprite>, 10> pieces;
+
 
         // Overridden draw method to draw CubeFace to the RenderTarget
         virtual void draw(sf::RenderTarget &renderTarget, sf::RenderStates renderStates) const;
