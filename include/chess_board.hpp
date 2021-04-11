@@ -30,6 +30,12 @@ class ChessBoard : public sf::Drawable {
         // Method used to find the indices of a piece's corresponding
         // sprite in the pieces array
         sf::Vector2i findPieceSprite(int file, int rank);
+        // Method used to move a piece and update their corresponding sprite's position
+        // on the board
+        void movePiece(int file, int rank, int new_file, int new_rank);
+        // Overloaded method used to update a piece's sprite position on the board
+        void updateSpritePosition(int file, int rank, int new_file, int new_rank);
+        void updateSpritePosition(int file, int rank, const sf::Vector2f& new_position);
 
     private:
         // 2D array containing the RectangleShapes for each board square
@@ -43,11 +49,17 @@ class ChessBoard : public sf::Drawable {
         Piece square[8][8];
         // Current color to move
         Piece::Color active_color;
-        int move_count;
+        // Keeps track of number of half-moves made since starting position
+        int move_count = 0;
+        // Booleans to keep track of castling availability;
+        bool white_king_side_castle = false;
+        bool white_queen_side_castle = false;
+        bool black_king_side_castle = false;
+        bool black_queen_side_castle = false;
         // Contains the file and rank of currently selected piece
         // (-1, -1) if no piece has been selected
         sf::Vector2i selected_piece;
-        Piece::Type selected_piece_type;
+        Piece::Type selected_piece_type = Piece::Type::None;
         // Contains the indices of the sprite in pieces array
         // corresponding to the selected piece
         sf::Vector2i selected_sprite;
@@ -58,7 +70,7 @@ class ChessBoard : public sf::Drawable {
         // Texture to hold piece set sprite sheet
         sf::Texture piece_textures;
         // Size of a single piece sprite in pixels
-        int sprite_size;
+        int sprite_size = 189;
         // King sprites
         sf::Sprite white_king;
         sf::Sprite black_king;
@@ -81,7 +93,7 @@ class ChessBoard : public sf::Drawable {
         sf::Sound capture_sound;
 
 
-        // Overridden draw method to draw CubeFace to the RenderTarget
+        // Overridden draw method to draw ChessBoard to the RenderTarget
         virtual void draw(sf::RenderTarget &renderTarget, sf::RenderStates renderStates) const;
 };
 

@@ -37,14 +37,12 @@ int main() {
                     break;
                 case sf::Event::MouseButtonPressed:
                     if (event.mouseButton.button == sf::Mouse::Button::Left) {
-                        std::cout << "Mouse pressed.\n";
                         mouse_pressed = true;
                         board.selectPiece(window.mapPixelToCoords(sf::Mouse::getPosition(window)));
                     }
                     break;
                 case sf::Event::MouseButtonReleased:
                     if (event.mouseButton.button == sf::Mouse::Button::Left) {
-                        std::cout << "Mouse released.\n";
                         board.dropPiece(window.mapPixelToCoords(sf::Mouse::getPosition(window)));
                         mouse_pressed = false;
                     }
