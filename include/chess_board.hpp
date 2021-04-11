@@ -37,6 +37,8 @@ class ChessBoard : public sf::Drawable {
         void updateSpritePosition(int file, int rank, int new_file, int new_rank);
         void updateSpritePosition(int file, int rank, const sf::Vector2f& new_position);
 
+        void togglePawnPromotionMenu(Piece::Color color, int file);
+
     private:
         // 2D array containing the RectangleShapes for each board square
         std::array<std::array<sf::RectangleShape, 8>, 8> square_rectangles;
@@ -56,6 +58,9 @@ class ChessBoard : public sf::Drawable {
         bool white_queen_side_castle = false;
         bool black_king_side_castle = false;
         bool black_queen_side_castle = false;
+        // Boolean to activate pawn promotion menu
+        bool pawn_promotion = false;
+        int pawn_promotion_file;
         // Contains the file and rank of currently selected piece
         // (-1, -1) if no piece has been selected
         sf::Vector2i selected_piece;
@@ -87,6 +92,9 @@ class ChessBoard : public sf::Drawable {
         //      pieces[8] : white queens
         //      pieces[9] : black queens
         std::array<std::vector<sf::Sprite>, 10> pieces;
+
+        sf::RectangleShape pawn_promotion_menu_box;
+        std::array<sf::Sprite, 4> pawn_promotion_menu_sprites;
 
         std::array<sf::SoundBuffer, 2> sound_buffers;
         sf::Sound move_sound;

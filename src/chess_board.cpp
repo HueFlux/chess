@@ -136,6 +136,14 @@ ChessBoard::ChessBoard(float board_size, float x, float y) :
             }
         }
     }
+    // Set up pawn promotion menu box and sprites
+    pawn_promotion_menu_box.setSize(sf::Vector2f(square_size.x, square_size.y * 4));
+    pawn_promotion_menu_box.setFillColor(sf::Color(255, 255, 255));
+
+    for (sf::Sprite& piece : pawn_promotion_menu_sprites) {
+        piece.setTexture(piece_textures);
+        piece.setScale(board_size / (sprite_size * 8) , board_size / (sprite_size * 8));
+    }
 }
 
 ChessBoard::~ChessBoard() {
@@ -228,6 +236,83 @@ void ChessBoard::selectPiece(const sf::Vector2f& mouse_position) {
     }
     int file = static_cast<int> (relative_x / square_size.x);
     int rank = static_cast<int> (relative_y / square_size.y);
+
+    // Pawn Promotion
+    if (pawn_promotion) {
+        if (active_color == Piece::Color::White) {
+            if (file != pawn_promotion_file || rank < 0 || rank > 3) {
+                return;
+            }
+            // Delete pawn sprite
+            sf::Vector2i pawn_sprite = findPieceSprite(file, 0);
+            pieces[pawn_sprite.x].erase(pieces[pawn_sprite.x].begin() + pawn_sprite.y);
+
+            if (rank == 0) { // Promote to queen
+                square[file][0].type = Piece::Type::Queen;
+                pieces[8].push_back(pawn_promotion_menu_sprites[0]);
+                pieces[8].back().setPosition(board_origin.x + square_size.x * file,
+                                             board_origin.y + square_size.x * 0);
+            }
+            else if (rank == 1) { // Promote to knight
+                square[file][0].type = Piece::Type::Knight;
+                pieces[2].push_back(pawn_promotion_menu_sprites[1]);
+                pieces[2].back().setPosition(board_origin.x + square_size.x * file,
+                                             board_origin.y + square_size.x * 0);
+            }
+            else if (rank == 2) { // Promote to rook
+                square[file][0].type = Piece::Type::Rook;
+                pieces[6].push_back(pawn_promotion_menu_sprites[2]);
+                pieces[6].back().setPosition(board_origin.x + square_size.x * file,
+                                             board_origin.y + square_size.x * 0);
+            }
+            else if (rank == 3) { // Promote to bishop
+                square[file][0].type = Piece::Type::Bishop;
+                pieces[4].push_back(pawn_promotion_menu_sprites[3]);
+                pieces[4].back().setPosition(board_origin.x + square_size.x * file,
+                                             board_origin.y + square_size.x * 0);
+            }
+
+        }
+        else {
+            if (file != pawn_promotion_file || rank < 4 || rank > 7) {
+                return;
+            }
+            // Delete pawn sprite
+            sf::Vector2i pawn_sprite = findPieceSprite(file, 7);
+            pieces[pawn_sprite.x].erase(pieces[pawn_sprite.x].begin() + pawn_sprite.y);
+
+            if (rank == 7) { // Promote to queen
+                square[file][7].type = Piece::Type::Queen;
+                pieces[9].push_back(pawn_promotion_menu_sprites[3]);
+                pieces[9].back().setPosition(board_origin.x + square_size.x * file,
+                                             board_origin.y + square_size.x * 7);
+            }
+            else if (rank == 6) { // Promote to knight
+                square[file][7].type = Piece::Type::Knight;
+                pieces[3].push_back(pawn_promotion_menu_sprites[2]);
+                pieces[3].back().setPosition(board_origin.x + square_size.x * file,
+                                             board_origin.y + square_size.x * 7);
+            }
+            else if (rank == 5) { // Promote to rook
+                square[file][7].type = Piece::Type::Rook;
+                pieces[7].push_back(pawn_promotion_menu_sprites[1]);
+                pieces[7].back().setPosition(board_origin.x + square_size.x * file,
+                                             board_origin.y + square_size.x * 7);
+            }
+            else if (rank == 4) { // Promote to bishop
+                square[file][7].type = Piece::Type::Bishop;
+                pieces[5].push_back(pawn_promotion_menu_sprites[0]);
+                pieces[5].back().setPosition(board_origin.x + square_size.x * file,
+                                             board_origin.y + square_size.x * 7);
+            }
+        }
+        pawn_promotion = false;
+        // Next move
+        active_color = (active_color == Piece::Color::White) ? Piece::Color::Black : Piece::Color::White;
+        move_count++;
+        return;
+    }
+
     // Selected empty square
     if (square[file][rank].type == Piece::Type::None) {
         selected_piece.x = selected_piece.y = -1;
@@ -304,13 +389,18 @@ void ChessBoard::dropPiece(const sf::Vector2f& mouse_position) {
     selected_piece.x = selected_piece.y = -1;
     selected_piece_type = Piece::Type::None;
     selected_sprite.x = selected_sprite.y = -1;
-
-    active_color = (active_color == Piece::Color::White) ? Piece::Color::Black : Piece::Color::White;
-    move_count++;
     // Update last move highlight squares
     last_move[0].setPosition(selected_square.getPosition());
     last_move[1].setPosition(board_origin.x + square_size.x * file,
                              board_origin.y + square_size.y * rank);
+    // Pawn promotion
+    if (pawn_promotion) {
+        togglePawnPromotionMenu(active_color, file);
+        return;
+    }
+    // Next move
+    active_color = (active_color == Piece::Color::White) ? Piece::Color::Black : Piece::Color::White;
+    move_count++;
 }
 
 void ChessBoard::movePiece(int file, int rank, int new_file, int new_rank) {
@@ -405,6 +495,15 @@ void ChessBoard::movePiece(int file, int rank, int new_file, int new_rank) {
         square[new_file][new_rank] = square[file][rank];
         square[file][rank].type = Piece::Type::None;
         capture_sound.play();
+    }
+
+    // Pawn promotion
+    if (square[new_file][new_rank].type == Piece::Type::Pawn) {
+        if ((square[new_file][new_rank].color == Piece::Color::White && new_rank == 0)
+            || (square[new_file][new_rank].color == Piece::Color::Black && new_rank == 7)) {
+            pawn_promotion = true;
+            pawn_promotion_file = new_file;
+        }
     }
 }
 
@@ -555,6 +654,42 @@ sf::Vector2i ChessBoard::findPieceSprite(int file, int rank) {
     return indices;
 }
 
+void ChessBoard::togglePawnPromotionMenu(Piece::Color color, int file) {
+    if (color == Piece::Color::White) {
+        pawn_promotion_menu_box.setPosition(board_origin.x + square_size.x * file, 0);
+        // Queen, Knight, Rook, Bishop
+        pawn_promotion_menu_sprites[0].setTextureRect(sf::IntRect(sprite_size * 4, sprite_size,
+                                                                  sprite_size, sprite_size));
+        pawn_promotion_menu_sprites[1].setTextureRect(sf::IntRect(sprite_size * 2, sprite_size,
+                                                                  sprite_size, sprite_size));
+        pawn_promotion_menu_sprites[2].setTextureRect(sf::IntRect(sprite_size * 5, sprite_size,
+                                                                  sprite_size, sprite_size));
+        pawn_promotion_menu_sprites[3].setTextureRect(sf::IntRect(0, sprite_size,
+                                                                  sprite_size, sprite_size));
+
+        for (int i = 0; i < pawn_promotion_menu_sprites.size(); i++) {
+            pawn_promotion_menu_sprites[i].setPosition(board_origin.x + square_size.x * file,
+                                                       board_origin.y + square_size.x * i);
+        }
+    } else {
+        pawn_promotion_menu_box.setPosition(board_origin.x + square_size.x * file,
+                                            board_origin.y + square_size.y * 4);
+        // Bishop, Rook, Queen, Knight
+        pawn_promotion_menu_sprites[3].setTextureRect(sf::IntRect(sprite_size * 4, 0,
+                                                                  sprite_size, sprite_size));
+        pawn_promotion_menu_sprites[2].setTextureRect(sf::IntRect(sprite_size * 2, 0,
+                                                                  sprite_size, sprite_size));
+        pawn_promotion_menu_sprites[1].setTextureRect(sf::IntRect(sprite_size * 5, 0,
+                                                                  sprite_size, sprite_size));
+        pawn_promotion_menu_sprites[0].setTextureRect(sf::IntRect(0, 0,
+                                                                  sprite_size, sprite_size));
+        for (int i = 0; i < pawn_promotion_menu_sprites.size(); i++) {
+            pawn_promotion_menu_sprites[i].setPosition(board_origin.x + square_size.x * file,
+                                                       board_origin.y + square_size.x * (4 + i));
+        }
+    }
+}
+
 void ChessBoard::draw(sf::RenderTarget &renderTarget, sf::RenderStates renderStates) const {
     // Draw board
     for (int file = 0; file < square_rectangles.size(); file++) {
@@ -589,5 +724,12 @@ void ChessBoard::draw(sf::RenderTarget &renderTarget, sf::RenderStates renderSta
     }
     if (selected_sprite.x != -1 && selected_sprite.y != -1) {
         renderTarget.draw(pieces[selected_sprite.x][selected_sprite.y]);
+    }
+
+    if (pawn_promotion) {
+        renderTarget.draw(pawn_promotion_menu_box);
+        for (const sf::Sprite& piece: pawn_promotion_menu_sprites) {
+            renderTarget.draw(piece);
+        }
     }
 }
