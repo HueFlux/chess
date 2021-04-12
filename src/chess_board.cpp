@@ -13,7 +13,8 @@ ChessBoard::ChessBoard(float board_size, float x, float y) :
     board_origin(sf::Vector2f(x, y)),
     square_size(sf::Vector2f(board_size / 8, board_size / 8)),
     selected_piece(sf::Vector2i(-1, -1)),
-    selected_sprite(sf::Vector2i(-1, -1))
+    selected_sprite(sf::Vector2i(-1, -1)),
+    en_passant(sf::Vector2i(-1, -1))
 {
     // Load piece textures
     if (!piece_textures.loadFromFile("../res/pieces/maestro/maestro_pieces.png")) {
@@ -33,7 +34,7 @@ ChessBoard::ChessBoard(float board_size, float x, float y) :
     }
     capture_sound.setBuffer(sound_buffers[1]);
 
-    loadPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    loadPositionFromFEN("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
 
     for (sf::RectangleShape& square : last_move) {
         square.setSize(square_size);
@@ -189,7 +190,6 @@ void ChessBoard::loadPositionFromFEN(const std::string& fen) {
     // Parse active color
     i++;
     if (i >= fen.length()) {
-        std::cout << "No active color provided." << std::endl;
         return;
     }
     if (fen[i] == 'w') {
@@ -218,6 +218,21 @@ void ChessBoard::loadPositionFromFEN(const std::string& fen) {
         }
         else {
             std::cout << "Invalid symbol." << std::endl;
+        }
+    }
+    // Parse en passant target square
+    i++;
+    if (i + 1 >= fen.length()) {
+        return;
+    }
+    if (fen[i] != '-') {
+        int file = fen[i] - 'a';
+        int rank = 7 - (fen[++i] - '1');
+        if (file < 0 || file > 7 || rank < 0 || rank > 7) {
+            std::cout << "Invalid en passant target square." << std::endl;
+        } else {
+            en_passant.x = file;
+            en_passant.y = rank;
         }
     }
 
@@ -478,6 +493,43 @@ void ChessBoard::movePiece(int file, int rank, int new_file, int new_rank) {
             }
         }
     }
+    // En passant
+    if (square[file][rank].type == Piece::Type::Pawn) {
+        // En passant capture
+        if (new_file == en_passant.x && new_rank == en_passant.y) {
+            updateSpritePosition(file, rank, new_file, new_rank);
+            // Erase captured pawn's sprite and position on board
+            sf::Vector2i captured_sprite;
+            if (square[file][rank].color == Piece::Color::White) {
+                captured_sprite = findPieceSprite(new_file, new_rank + 1);
+                square[new_file][new_rank + 1].type = Piece::Type::None;
+            }
+            else {
+                captured_sprite = findPieceSprite(new_file, new_rank - 1);
+                square[new_file][new_rank - 1].type = Piece::Type::None;
+            }
+            pieces[captured_sprite.x].erase(pieces[captured_sprite.x].begin() + captured_sprite.y);
+
+            square[new_file][new_rank] = square[file][rank];
+            square[file][rank].type = Piece::Type::None;
+            capture_sound.play();
+            // Reset en passant target square
+            en_passant.x = -1;
+            en_passant.y = -1;
+            return;
+        }
+        // New en passant target square
+        else {
+            if (square[file][rank].color == Piece::Color::White && rank == 6 && new_rank == 4) {
+                en_passant.x = file;
+                en_passant.y = 5;
+            }
+            else if (square[file][rank].color == Piece::Color::Black && rank == 1 && new_rank == 3) {
+                en_passant.x = file;
+                en_passant.y = 2;
+            }
+        }
+    }
     // Regular move
     if (square[new_file][new_rank].type == Piece::Type::None) {
         updateSpritePosition(file, rank, new_file, new_rank);
@@ -496,13 +548,20 @@ void ChessBoard::movePiece(int file, int rank, int new_file, int new_rank) {
         square[file][rank].type = Piece::Type::None;
         capture_sound.play();
     }
-
     // Pawn promotion
     if (square[new_file][new_rank].type == Piece::Type::Pawn) {
         if ((square[new_file][new_rank].color == Piece::Color::White && new_rank == 0)
             || (square[new_file][new_rank].color == Piece::Color::Black && new_rank == 7)) {
             pawn_promotion = true;
             pawn_promotion_file = new_file;
+        }
+    }
+    // Reset en passant target square
+    if (en_passant.x != -1 && en_passant.y != -1) {
+        if ((active_color == Piece::Color::White && en_passant.y == 2)
+            || (active_color == Piece::Color::Black && en_passant.y == 5)) {
+            en_passant.x = -1;
+            en_passant.y = -1;
         }
     }
 }

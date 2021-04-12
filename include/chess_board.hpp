@@ -36,7 +36,7 @@ class ChessBoard : public sf::Drawable {
         // Overloaded method used to update a piece's sprite position on the board
         void updateSpritePosition(int file, int rank, int new_file, int new_rank);
         void updateSpritePosition(int file, int rank, const sf::Vector2f& new_position);
-
+        // Method used to toggle the pawn promotion menu for the given color and file
         void togglePawnPromotionMenu(Piece::Color color, int file);
 
     private:
@@ -50,7 +50,7 @@ class ChessBoard : public sf::Drawable {
         // with the rank going in decending order i.e. 8 to 1
         Piece square[8][8];
         // Current color to move
-        Piece::Color active_color;
+        Piece::Color active_color = Piece::Color::White;
         // Keeps track of number of half-moves made since starting position
         int move_count = 0;
         // Booleans to keep track of castling availability;
@@ -58,8 +58,12 @@ class ChessBoard : public sf::Drawable {
         bool white_queen_side_castle = false;
         bool black_king_side_castle = false;
         bool black_queen_side_castle = false;
+        // Contains the file and rank of an en passant target square
+        // (-1, -1) if there is none
+        sf::Vector2i en_passant;
         // Boolean to activate pawn promotion menu
         bool pawn_promotion = false;
+        // Keeps track of the file of the pawn to be promoted
         int pawn_promotion_file;
         // Contains the file and rank of currently selected piece
         // (-1, -1) if no piece has been selected
@@ -92,7 +96,7 @@ class ChessBoard : public sf::Drawable {
         //      pieces[8] : white queens
         //      pieces[9] : black queens
         std::array<std::vector<sf::Sprite>, 10> pieces;
-
+        // RectangleShape and sprites for the pawn promotion menu
         sf::RectangleShape pawn_promotion_menu_box;
         std::array<sf::Sprite, 4> pawn_promotion_menu_sprites;
 
