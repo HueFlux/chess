@@ -89,9 +89,6 @@ class ChessBoard : public sf::Drawable {
         sf::Texture piece_textures;
         // Size of a single piece sprite in pixels
         int sprite_size = 189;
-        // King sprites
-        sf::Sprite white_king;
-        sf::Sprite black_king;
         // Array of vectors containing the Sprites for every other type of piece
         // Structure is:
         //      pieces[0] : white pawns
@@ -104,7 +101,9 @@ class ChessBoard : public sf::Drawable {
         //      pieces[7] : black rooks
         //      pieces[8] : white queens
         //      pieces[9] : black queens
-        std::array<std::vector<sf::Sprite>, 10> pieces;
+        //      pieces[10] : white king
+        //      pieces[11] : black king
+        std::array<std::vector<sf::Sprite>, 12> pieces;
         // RectangleShape and sprites for the pawn promotion menu
         sf::RectangleShape pawn_promotion_menu_box;
         std::array<sf::Sprite, 4> pawn_promotion_menu_sprites;

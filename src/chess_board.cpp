@@ -64,78 +64,72 @@ ChessBoard::ChessBoard(float board_size, float x, float y) :
             if (square[file][rank].type == Piece::Type::None) {
                 continue;
             }
+
+            sf::Sprite piece;
+            piece.setTexture(piece_textures);
+            piece.setPosition(board_origin.x + square_size.x * file,
+                              board_origin.y + square_size.y * rank);
+            piece.setScale(board_size / (sprite_size * 8) , board_size / (sprite_size * 8));
+
             if (square[file][rank].type == Piece::Type::King) {
                 if (square[file][rank].color == Piece::Color::White) {
-                    white_king.setTexture(piece_textures);
-                    white_king.setTextureRect(sf::IntRect(sprite_size, sprite_size, sprite_size, sprite_size));
-                    white_king.setPosition(board_origin.x + square_size.x * file,
-                                           board_origin.y + square_size.y * rank);
-                    white_king.setScale(board_size / (sprite_size * 8) , board_size / (sprite_size * 8));
+                    piece.setTextureRect(sf::IntRect(sprite_size, sprite_size, sprite_size, sprite_size));
+                    pieces[10].push_back(piece);
+
                 }
                 else {
-                    black_king.setTexture(piece_textures);
-                    black_king.setTextureRect(sf::IntRect(sprite_size, 0, sprite_size, sprite_size));
-                    black_king.setPosition(board_origin.x + square_size.x * file,
-                                           board_origin.y + square_size.y * rank);
-                    black_king.setScale(board_size / (sprite_size * 8), board_size / (sprite_size * 8));
+                    piece.setTextureRect(sf::IntRect(sprite_size, 0, sprite_size, sprite_size));
+                    pieces[11].push_back(piece);
+                }
+            }
+            else if (square[file][rank].type == Piece::Type::Pawn) {
+                if (square[file][rank].color == Piece::Color::White) {
+                    piece.setTextureRect(sf::IntRect(sprite_size * 3, sprite_size, sprite_size, sprite_size));
+                    pieces[0].push_back(piece);
+                }
+                else {
+                    piece.setTextureRect(sf::IntRect(sprite_size * 3, 0, sprite_size, sprite_size));
+                    pieces[1].push_back(piece);
+                }
+            }
+            else if (square[file][rank].type == Piece::Type::Knight) {
+                if (square[file][rank].color == Piece::Color::White) {
+                    piece.setTextureRect(sf::IntRect(sprite_size * 2, sprite_size, sprite_size, sprite_size));
+                    pieces[2].push_back(piece);
+                }
+                else {
+                    piece.setTextureRect(sf::IntRect(sprite_size * 2, 0, sprite_size, sprite_size));
+                    pieces[3].push_back(piece);
+                }
+            }
+            else if (square[file][rank].type == Piece::Type::Bishop) {
+                if (square[file][rank].color == Piece::Color::White) {
+                    piece.setTextureRect(sf::IntRect(0, sprite_size, sprite_size, sprite_size));
+                    pieces[4].push_back(piece);
+                }
+                else {
+                    piece.setTextureRect(sf::IntRect(0, 0, sprite_size, sprite_size));
+                    pieces[5].push_back(piece);
+                }
+            }
+            else if (square[file][rank].type == Piece::Type::Rook) {
+                if (square[file][rank].color == Piece::Color::White) {
+                    piece.setTextureRect(sf::IntRect(sprite_size * 5, sprite_size, sprite_size, sprite_size));
+                    pieces[6].push_back(piece);
+                }
+                else {
+                    piece.setTextureRect(sf::IntRect(sprite_size * 5, 0, sprite_size, sprite_size));
+                    pieces[7].push_back(piece);
                 }
             }
             else {
-                sf::Sprite piece;
-                piece.setTexture(piece_textures);
-                piece.setPosition(board_origin.x + square_size.x * file,
-                                  board_origin.y + square_size.y * rank);
-                piece.setScale(board_size / (sprite_size * 8) , board_size / (sprite_size * 8));
-
-                if (square[file][rank].type == Piece::Type::Pawn) {
-                    if (square[file][rank].color == Piece::Color::White) {
-                        piece.setTextureRect(sf::IntRect(sprite_size * 3, sprite_size, sprite_size, sprite_size));
-                        pieces[0].push_back(piece);
-                    }
-                    else {
-                        piece.setTextureRect(sf::IntRect(sprite_size * 3, 0, sprite_size, sprite_size));
-                        pieces[1].push_back(piece);
-                    }
-                }
-                else if (square[file][rank].type == Piece::Type::Knight) {
-                    if (square[file][rank].color == Piece::Color::White) {
-                        piece.setTextureRect(sf::IntRect(sprite_size * 2, sprite_size, sprite_size, sprite_size));
-                        pieces[2].push_back(piece);
-                    }
-                    else {
-                        piece.setTextureRect(sf::IntRect(sprite_size * 2, 0, sprite_size, sprite_size));
-                        pieces[3].push_back(piece);
-                    }
-                }
-                else if (square[file][rank].type == Piece::Type::Bishop) {
-                    if (square[file][rank].color == Piece::Color::White) {
-                        piece.setTextureRect(sf::IntRect(0, sprite_size, sprite_size, sprite_size));
-                        pieces[4].push_back(piece);
-                    }
-                    else {
-                        piece.setTextureRect(sf::IntRect(0, 0, sprite_size, sprite_size));
-                        pieces[5].push_back(piece);
-                    }
-                }
-                else if (square[file][rank].type == Piece::Type::Rook) {
-                    if (square[file][rank].color == Piece::Color::White) {
-                        piece.setTextureRect(sf::IntRect(sprite_size * 5, sprite_size, sprite_size, sprite_size));
-                        pieces[6].push_back(piece);
-                    }
-                    else {
-                        piece.setTextureRect(sf::IntRect(sprite_size * 5, 0, sprite_size, sprite_size));
-                        pieces[7].push_back(piece);
-                    }
+                if (square[file][rank].color == Piece::Color::White) {
+                    piece.setTextureRect(sf::IntRect(sprite_size * 4, sprite_size, sprite_size, sprite_size));
+                    pieces[8].push_back(piece);
                 }
                 else {
-                    if (square[file][rank].color == Piece::Color::White) {
-                        piece.setTextureRect(sf::IntRect(sprite_size * 4, sprite_size, sprite_size, sprite_size));
-                        pieces[8].push_back(piece);
-                    }
-                    else {
-                        piece.setTextureRect(sf::IntRect(sprite_size * 4, 0, sprite_size, sprite_size));
-                        pieces[9].push_back(piece);
-                    }
+                    piece.setTextureRect(sf::IntRect(sprite_size * 4, 0, sprite_size, sprite_size));
+                    pieces[9].push_back(piece);
                 }
             }
         }
@@ -360,17 +354,6 @@ void ChessBoard::updateSelectedPiecePosition(const sf::Vector2f& new_position) {
     if (file == -1 || rank == -1) {
         return;
     }
-    if (square[file][rank].type == Piece::Type::King) {
-        if (square[file][rank].color == Piece::Color::White) {
-            white_king.setPosition(new_position.x - square_size.x/2,
-                                   new_position.y - square_size.y/2);
-        }
-        else {
-            black_king.setPosition(new_position.x - square_size.x/2,
-                                   new_position.y - square_size.y/2);
-        }
-        return;
-    }
     if (selected_sprite.x == -1 && selected_sprite.y == -1) {
         selected_sprite = findPieceSprite(file, rank);
     }
@@ -395,8 +378,7 @@ void ChessBoard::dropPiece(const sf::Vector2f& mouse_position) {
     // or the opponent's king
     if (relative_x > board_size || relative_y > board_size
         || relative_x < 0 || relative_y < 0
-        || (square[file][rank].type != Piece::Type::None && square[file][rank].color == active_color)
-        || square[file][rank].type == Piece::Type::King) {
+        || (square[file][rank].type != Piece::Type::None && square[file][rank].color == active_color)) {
         selected_piece.x = selected_piece.y = -1;
         selected_piece_type = Piece::Type::None;
         selected_sprite.x = selected_sprite.y = -1;
@@ -578,17 +560,6 @@ void ChessBoard::updateSpritePosition(int file, int rank, const sf::Vector2f& ne
     if (file < 0 || file > 7 || rank < 0 || rank > 7) {
         return;
     }
-    if (square[file][rank].type == Piece::Type::King) {
-        if (square[file][rank].color == Piece::Color::White) {
-            white_king.setPosition(new_position.x,
-                                   new_position.y);
-        }
-        else {
-            black_king.setPosition(new_position.x,
-                                   new_position.y);
-        }
-        return;
-    }
     sf::Vector2i piece_sprite = findPieceSprite(file, rank);
     pieces[piece_sprite.x][piece_sprite.y].setPosition(new_position.x,
                                                        new_position.y);
@@ -607,8 +578,20 @@ sf::Vector2i ChessBoard::findPieceSprite(int file, int rank) {
     if (file < 0 || file > 7 || rank < 0 || rank > 7) {
         return indices;
     }
-
-    if (square[file][rank].type == Piece::Type::Pawn) {
+    if (square[file][rank].type == Piece::Type::None) {
+        return indices;
+    }
+    if (square[file][rank].type == Piece::Type::King) {
+        if (square[file][rank].color == Piece::Color::White) {
+            indices.x = 10;
+            indices.y = 0;
+        }
+        else {
+            indices.x = 11;
+            indices.y = 0;
+        }
+    }
+    else if (square[file][rank].type == Piece::Type::Pawn) {
         if (square[file][rank].color == Piece::Color::White) {
             indices.x = 0;
             for (int i = 0; i < pieces[0].size(); i++) {
@@ -1031,13 +1014,7 @@ void ChessBoard::draw(sf::RenderTarget &renderTarget, sf::RenderStates renderSta
             renderTarget.draw(pieces[i][j]);
         }
     }
-    if (active_color == Piece::Color::White) {
-        renderTarget.draw(black_king);
-        renderTarget.draw(white_king);
-    } else {
-        renderTarget.draw(white_king);
-        renderTarget.draw(black_king);
-    }
+
     if (selected_sprite.x != -1 && selected_sprite.y != -1) {
         renderTarget.draw(pieces[selected_sprite.x][selected_sprite.y]);
     }
