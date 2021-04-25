@@ -4,6 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include "piece.hpp"
+#include "move.hpp"
 #include <array>
 #include <vector>
 #include <string>
@@ -38,6 +39,14 @@ class ChessBoard : public sf::Drawable {
         void updateSpritePosition(int file, int rank, const sf::Vector2f& new_position);
         // Method used to toggle the pawn promotion menu for the given color and file
         void togglePawnPromotionMenu(Piece::Color color, int file);
+
+        void generateMoves(Piece::Color color);
+        void generatePawnMoves(int file, int rank);
+        void generateRookMoves(int start_file, int start_rank);
+        void generateBishopMoves(int start_file, int start_rank);
+        void generateKnightMoves(int start_file, int start_rank);
+        void generateKingMoves(int start_file, int start_rank);
+        bool isLegalMove(const Move& move);
 
     private:
         // 2D array containing the RectangleShapes for each board square
@@ -99,12 +108,12 @@ class ChessBoard : public sf::Drawable {
         // RectangleShape and sprites for the pawn promotion menu
         sf::RectangleShape pawn_promotion_menu_box;
         std::array<sf::Sprite, 4> pawn_promotion_menu_sprites;
-
+        // Array to store SoundBuffers for all in game sounds
         std::array<sf::SoundBuffer, 2> sound_buffers;
         sf::Sound move_sound;
         sf::Sound capture_sound;
 
-
+        std::vector<Move> legalMoves;
         // Overridden draw method to draw ChessBoard to the RenderTarget
         virtual void draw(sf::RenderTarget &renderTarget, sf::RenderStates renderStates) const;
 };

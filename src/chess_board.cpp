@@ -2,11 +2,13 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include "piece.hpp"
+#include "move.hpp"
 #include <iostream>
 #include <string>
 #include <unordered_map>
 #include <cctype>
 #include <exception>
+#include <algorithm>
 
 ChessBoard::ChessBoard(float board_size, float x, float y) :
     board_size(board_size),
@@ -34,7 +36,8 @@ ChessBoard::ChessBoard(float board_size, float x, float y) :
     }
     capture_sound.setBuffer(sound_buffers[1]);
 
-    loadPositionFromFEN("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
+    loadPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    generateMoves(active_color);
 
     for (sf::RectangleShape& square : last_move) {
         square.setSize(square_size);
@@ -325,6 +328,7 @@ void ChessBoard::selectPiece(const sf::Vector2f& mouse_position) {
         // Next move
         active_color = (active_color == Piece::Color::White) ? Piece::Color::Black : Piece::Color::White;
         move_count++;
+        generateMoves(active_color);
         return;
     }
 
@@ -398,6 +402,9 @@ void ChessBoard::dropPiece(const sf::Vector2f& mouse_position) {
         selected_sprite.x = selected_sprite.y = -1;
         return;
     }
+    if (!isLegalMove(Move(selected_piece.x, selected_piece.y, file, rank))) {
+        return;
+    }
     // Perform move
     movePiece(selected_piece.x, selected_piece.y, file, rank);
     // Reset selected piece variables
@@ -416,6 +423,7 @@ void ChessBoard::dropPiece(const sf::Vector2f& mouse_position) {
     // Next move
     active_color = (active_color == Piece::Color::White) ? Piece::Color::Black : Piece::Color::White;
     move_count++;
+    generateMoves(active_color);
 }
 
 void ChessBoard::movePiece(int file, int rank, int new_file, int new_rank) {
@@ -747,6 +755,255 @@ void ChessBoard::togglePawnPromotionMenu(Piece::Color color, int file) {
                                                        board_origin.y + square_size.x * (4 + i));
         }
     }
+}
+
+void ChessBoard::generateMoves(Piece::Color color) {
+    legalMoves.clear();
+    for (int file = 0; file < std::size(square); file++) {
+        for (int rank = 0; rank < std::size(square[file]); rank++) {
+            if (square[file][rank].color != color) {
+                continue;
+            }
+            if (square[file][rank].type == Piece::Type::Pawn) {
+                generatePawnMoves(file, rank);
+            }
+            else if (square[file][rank].type == Piece::Type::Bishop) {
+                generateBishopMoves(file, rank);
+            }
+            else if (square[file][rank].type == Piece::Type::Rook) {
+                generateRookMoves(file, rank);
+            }
+            else if (square[file][rank].type == Piece::Type::Queen) {
+                generateBishopMoves(file, rank);
+                generateRookMoves(file, rank);
+            }
+            else if (square[file][rank].type == Piece::Type::Knight) {
+                generateKnightMoves(file, rank);
+            }
+            else if (square[file][rank].type == Piece::Type::King) {
+                generateKingMoves(file, rank);
+            }
+        }
+    }
+}
+
+void ChessBoard::generatePawnMoves(int file, int rank) {
+    if (square[file][rank].color == Piece::Color::White) {
+        if (square[file][rank - 1].type == Piece::Type::None) {
+            legalMoves.emplace_back(file, rank, file, rank - 1);
+        }
+        if (rank == 6) {
+            legalMoves.emplace_back(file, rank, file, rank - 2);
+        }
+        if (square[file - 1][rank - 1].type != Piece::Type::None
+            || file - 1 == en_passant.x && rank - 1 == en_passant.y) {
+            legalMoves.emplace_back(file, rank, file - 1, rank - 1);
+        }
+        if (square[file + 1][rank - 1].type != Piece::Type::None
+            || file + 1 == en_passant.x && rank - 1 == en_passant.y) {
+            legalMoves.emplace_back(file, rank, file + 1, rank - 1);
+        }
+    }
+    else {
+        if (square[file][rank + 1].type == Piece::Type::None) {
+            legalMoves.emplace_back(file, rank, file, rank + 1);
+        }
+        if (rank == 1) {
+            legalMoves.emplace_back(file, rank, file, rank + 2);
+        }
+        if (square[file - 1][rank + 1].type != Piece::Type::None
+            || file - 1 == en_passant.x && rank + 1 == en_passant.y) {
+            legalMoves.emplace_back(file, rank, file - 1, rank + 1);
+        }
+        if (square[file + 1][rank + 1].type != Piece::Type::None
+            || file + 1 == en_passant.x && rank + 1 == en_passant.y) {
+            legalMoves.emplace_back(file, rank, file + 1, rank + 1);
+        }
+    }
+}
+
+void ChessBoard::generateRookMoves(int start_file, int start_rank) {
+    // Right
+    for (int file = start_file + 1; file < std::size(square); file++) {
+        if (square[file][start_rank].type == Piece::Type::None) {
+            legalMoves.emplace_back(start_file, start_rank, file, start_rank);
+        }
+        else if (square[file][start_rank].color != square[start_file][start_rank].color) {
+            legalMoves.emplace_back(start_file, start_rank, file, start_rank);
+            break;
+        }
+        else {
+            break;
+        }
+    }
+    // Left
+    for (int file = start_file - 1; file >= 0; file--) {
+        if (square[file][start_rank].type == Piece::Type::None) {
+            legalMoves.emplace_back(start_file, start_rank, file, start_rank);
+        }
+        else if (square[file][start_rank].color != square[start_file][start_rank].color) {
+            legalMoves.emplace_back(start_file, start_rank, file, start_rank);
+            break;
+        }
+        else {
+            break;
+        }
+    }
+    // Down
+    for (int rank = start_rank + 1; rank < std::size(square); rank++) {
+        if (square[start_file][rank].type == Piece::Type::None) {
+            legalMoves.emplace_back(start_file, start_rank, start_file, rank);
+        }
+        else if (square[start_file][rank].color != square[start_file][start_rank].color) {
+            legalMoves.emplace_back(start_file, start_rank, start_file, rank);
+            break;
+        }
+        else {
+            break;
+        }
+    }
+    // Up
+    for (int rank = start_rank - 1; rank >= 0; rank--) {
+        if (square[start_file][rank].type == Piece::Type::None) {
+            legalMoves.emplace_back(start_file, start_rank, start_file, rank);
+        }
+        else if (square[start_file][rank].color != square[start_file][start_rank].color) {
+            legalMoves.emplace_back(start_file, start_rank, start_file, rank);
+            break;
+        }
+        else {
+            break;
+        }
+    }
+}
+
+void ChessBoard::generateBishopMoves(int start_file, int start_rank) {
+    // Right & Down
+    for (int file = start_file + 1, rank = start_rank + 1; file < std::size(square) && rank < std::size(square[file]); file++, rank++) {
+        if (square[file][rank].type == Piece::Type::None) {
+            legalMoves.emplace_back(start_file, start_rank, file, rank);
+        }
+        else if (square[file][rank].color != square[start_file][start_rank].color) {
+            legalMoves.emplace_back(start_file, start_rank, file, rank);
+            break;
+        }
+        else {
+            break;
+        }
+    }
+    // Left & Up
+    for (int file = start_file - 1, rank = start_rank - 1; file >= 0 && rank >= 0; file--, rank--) {
+        if (square[file][rank].type == Piece::Type::None) {
+            legalMoves.emplace_back(start_file, start_rank, file, rank);
+        }
+        else if (square[file][rank].color != square[start_file][start_rank].color) {
+            legalMoves.emplace_back(start_file, start_rank, file, rank);
+            break;
+        }
+        else {
+            break;
+        }
+    }
+    // Right & Up
+    for (int file = start_file + 1, rank = start_rank - 1; file < std::size(square) && rank >= 0; file++, rank--) {
+        if (square[file][rank].type == Piece::Type::None) {
+            legalMoves.emplace_back(start_file, start_rank, file, rank);
+        }
+        else if (square[file][rank].color != square[start_file][start_rank].color) {
+            legalMoves.emplace_back(start_file, start_rank, file, rank);
+            break;
+        }
+        else {
+            break;
+        }
+    }
+    // Left & Down
+    for (int file = start_file - 1, rank = start_rank + 1; file >= 0 && rank < std::size(square[file]); file--, rank++) {
+        if (square[file][rank].type == Piece::Type::None) {
+            legalMoves.emplace_back(start_file, start_rank, file, rank);
+        }
+        else if (square[file][rank].color != square[start_file][start_rank].color) {
+            legalMoves.emplace_back(start_file, start_rank, file, rank);
+            break;
+        }
+        else {
+            break;
+        }
+    }
+}
+
+void ChessBoard::generateKnightMoves(int start_file, int start_rank) {
+    std::array<std::array<int, 2>, 8> targets = {{
+        {{start_file + 2, start_rank + 1}},
+        {{start_file + 2, start_rank - 1}},
+        {{start_file - 2, start_rank + 1}},
+        {{start_file - 2, start_rank - 1}},
+        {{start_file + 1, start_rank + 2}},
+        {{start_file + 1, start_rank - 2}},
+        {{start_file - 1, start_rank + 2}},
+        {{start_file - 1, start_rank - 2}}
+    }};
+
+    for (const auto& target : targets) {
+        if (target[0] < 0 || target[0] > 7 || target[1] < 0 || target[1] > 7) {
+            continue;
+        }
+        if (square[target[0]][target[1]].type == Piece::Type::None
+            || square[target[0]][target[1]].color != square[start_file][start_rank].color) {
+            legalMoves.emplace_back(start_file, start_rank, target[0], target[1]);
+        }
+    }
+}
+
+void ChessBoard::generateKingMoves(int start_file, int start_rank) {
+    // Moves to rank above and below the king
+    for (int file = start_file - 1; file < std::size(square); file++) {
+        if (file < 0) {
+            continue;
+        }
+        if (start_rank - 1 >= 0) {
+            if (square[file][start_rank - 1].type == Piece::Type::None
+                || square[file][start_rank - 1].color != square[start_file][start_rank].color) {
+                legalMoves.emplace_back(start_file, start_rank, file, start_rank - 1);
+            }
+        }
+        if (start_rank + 1 < 8) {
+            if (square[file][start_rank + 1].type == Piece::Type::None
+                || square[file][start_rank + 1].color != square[start_file][start_rank].color) {
+                legalMoves.emplace_back(start_file, start_rank, file, start_rank + 1);
+            }
+        }
+    }
+    // Moves to squares on either side of the king on the same rank
+    if (start_file - 1 > 0) {
+        if (square[start_file - 1][start_rank].type == Piece::Type::None
+            || square[start_file - 1][start_rank].color != square[start_file][start_rank].color) {
+            legalMoves.emplace_back(start_file, start_rank, start_file - 1, start_rank);
+        }
+    }
+
+    if (start_file + 1 < 8) {
+        if (square[start_file + 1][start_rank].type == Piece::Type::None
+            || square[start_file + 1][start_rank].color != square[start_file][start_rank].color) {
+            legalMoves.emplace_back(start_file, start_rank, start_file + 1, start_rank);
+        }
+    }
+
+    // Castling moves
+    Piece::Color color = square[start_file][start_rank].color;
+    if (color == Piece::Color::White && white_king_side_castle
+        || color == Piece::Color::Black && black_king_side_castle) {
+        legalMoves.emplace_back(start_file, start_rank, start_file + 2, start_rank);
+    }
+    if (color == Piece::Color::White && white_queen_side_castle
+        || color == Piece::Color::Black && black_queen_side_castle) {
+        legalMoves.emplace_back(start_file, start_rank, start_file - 2, start_rank);
+    }
+
+}
+
+bool ChessBoard::isLegalMove(const Move& move) {
+    return std::find(legalMoves.begin(), legalMoves.end(), move) != legalMoves.end();
 }
 
 void ChessBoard::draw(sf::RenderTarget &renderTarget, sf::RenderStates renderStates) const {
