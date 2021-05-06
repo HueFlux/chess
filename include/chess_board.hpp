@@ -39,14 +39,22 @@ class ChessBoard : public sf::Drawable {
         void updateSpritePosition(int file, int rank, const sf::Vector2f& new_position);
         // Method used to toggle the pawn promotion menu for the given color and file
         void togglePawnPromotionMenu(Piece::Color color, int file);
-
+        // Method used to generate all legal moves for the given color
         void generateMoves(Piece::Color color);
+        // Helper methods to generate legal moves for each piece type
         void generatePawnMoves(int file, int rank);
         void generateRookMoves(int start_file, int start_rank);
         void generateBishopMoves(int start_file, int start_rank);
         void generateKnightMoves(int start_file, int start_rank);
         void generateKingMoves(int start_file, int start_rank);
-        bool isLegalMove(const Move& move);
+        // Method used to check if a move is legal
+        bool isLegalMove(const Move& move) const;
+        // Method used to validate and add a move to the list of legal moves
+        void addMove(int start_file, int start_rank, int target_file, int target_rank);
+        // Helper method used validate psuedo-legal moves
+        bool isValidLegalMove(int start_file, int start_rank, int target_file, int target_rank);
+        // Method used to determine if a color is currently in check
+        bool inCheck(Piece::Color color) const;
 
     private:
         // 2D array containing the RectangleShapes for each board square
@@ -62,6 +70,8 @@ class ChessBoard : public sf::Drawable {
         Piece::Color active_color = Piece::Color::White;
         // Keeps track of number of half-moves made since starting position
         int move_count = 0;
+        // Boolean to keep track of checks
+        bool check = false;
         // Booleans to keep track of castling availability;
         bool white_king_side_castle = false;
         bool white_queen_side_castle = false;
@@ -85,6 +95,8 @@ class ChessBoard : public sf::Drawable {
         std::array<sf::RectangleShape, 2> last_move;
         // RectangleShape used to hightlight the selected square
         sf::RectangleShape selected_square;
+        // RectangleShape used to highlight the king's square during check
+        sf::RectangleShape check_square;
         // Texture to hold piece set sprite sheet
         sf::Texture piece_textures;
         // Size of a single piece sprite in pixels
@@ -111,7 +123,7 @@ class ChessBoard : public sf::Drawable {
         std::array<sf::SoundBuffer, 2> sound_buffers;
         sf::Sound move_sound;
         sf::Sound capture_sound;
-
+        // Vector to store all legal moves from current position
         std::vector<Move> legalMoves;
         // Overridden draw method to draw ChessBoard to the RenderTarget
         virtual void draw(sf::RenderTarget &renderTarget, sf::RenderStates renderStates) const;
