@@ -48,7 +48,7 @@ ChessBoard::ChessBoard(float board_size, float x, float y) :
 
     check_square.setSize(square_size);
     check_square.setFillColor(sf::Color(255, 0, 0, 178));
-    
+
     // Create board squares and piece sprites
     for (int file = 0; file < square_rectangles.size(); file++) {
         for (int rank = 0; rank < square_rectangles.size(); rank++) {
@@ -340,6 +340,14 @@ void ChessBoard::selectPiece(const sf::Vector2f& mouse_position) {
             check = false;
         }
         generateMoves(active_color);
+        // Checkmate and stalemate
+        if (legalMoves.size() == 0) {
+            if (check) {
+                std::cout << "Checkmate! " << ((active_color == Piece::Color::White) ? "Black" : "White") << " wins!\n";
+            } else {
+                std::cout << "Stalemate! It's a draw!\n";
+            }
+        }
         return;
     }
 
@@ -434,6 +442,14 @@ void ChessBoard::dropPiece(const sf::Vector2f& mouse_position) {
         check = false;
     }
     generateMoves(active_color);
+    // Checkmate and stalemate
+    if (legalMoves.size() == 0) {
+        if (check) {
+            std::cout << "Checkmate! " << ((active_color == Piece::Color::White) ? "Black" : "White") << " wins!\n";
+        } else {
+            std::cout << "Stalemate! It's a draw!\n";
+        }
+    }
 }
 
 void ChessBoard::movePiece(int file, int rank, int new_file, int new_rank) {
@@ -445,57 +461,23 @@ void ChessBoard::movePiece(int file, int rank, int new_file, int new_rank) {
     }
     // Handle castling if king move
     if (square[file][rank].type == Piece::Type::King) {
+        if (new_rank == rank && new_file >= 6) {
+            // Move kingside rook to the other side of the king
+            movePiece(7, rank, 5, rank);
+            // Handle king position when placed on top of rook
+            new_file = 6;
+        }
+        else if (new_rank == rank && (new_file == 2 || new_file == 0)) {
+            // Move queenside rook to the other side of the king
+            movePiece(0, rank, 3, rank);
+            // Handle king position when placed on top of rook
+            new_file = 2;
+        }
         if (square[file][rank].color == Piece::Color::White) {
-            if (new_rank == 7 && new_file >= 6) {
-                if (white_king_side_castle && square[5][7].type == Piece::Type::None
-                                           && square[6][7].type == Piece::Type::None
-                                           && square[7][7].type == Piece::Type::Rook
-                                           && square[7][7].color == Piece::Color::White) {
-                    // Move kingside rook to the other side of the king
-                    movePiece(7, 7, 5, 7);
-                    // Handle king position when placed on top of rook
-                    new_file = 6;
-                }
-            }
-            else if (new_rank == 7 && (new_file == 2 || new_file == 0)) {
-                if (white_queen_side_castle && square[1][7].type == Piece::Type::None
-                                            && square[2][7].type == Piece::Type::None
-                                            && square[3][7].type == Piece::Type::None
-                                            && square[0][7].type == Piece::Type::Rook
-                                            && square[0][7].color == Piece::Color::White) {
-                    // Move queenside rook to the other side of the king
-                    movePiece(0, 7, 3, 7);
-                    // Handle king position when placed on top of rook
-                    new_file = 2;
-                }
-            }
             white_king_side_castle = false;
             white_queen_side_castle = false;
         }
         else {
-            if (new_rank == 0 && new_file >= 6) {
-                if (black_king_side_castle && square[5][0].type == Piece::Type::None
-                                           && square[6][0].type == Piece::Type::None
-                                           && square[7][0].type == Piece::Type::Rook
-                                           && square[7][0].color == Piece::Color::Black) {
-                    // Move kingside rook to the other side of the king
-                    movePiece(7, 0, 5, 0);
-                    // Handle king position when placed on top of rook
-                    new_file = 6;
-                }
-            }
-            else if (new_rank == 0 && (new_file == 2 || new_file == 0)) {
-                if (black_queen_side_castle && square[1][0].type == Piece::Type::None
-                                            && square[2][0].type == Piece::Type::None
-                                            && square[3][0].type == Piece::Type::None
-                                            && square[0][0].type == Piece::Type::Rook
-                                            && square[0][0].color == Piece::Color::Black) {
-                    // Move queenside rook to the other side of the king
-                    movePiece(0, 0, 3, 0);
-                    // Handle king position when placed on top of rook
-                    new_file = 2;
-                }
-            }
             black_king_side_castle = false;
             black_queen_side_castle = false;
         }
@@ -976,7 +958,7 @@ void ChessBoard::generateKnightMoves(int start_file, int start_rank) {
 
 void ChessBoard::generateKingMoves(int start_file, int start_rank) {
     // Moves to rank above and below the king
-    for (int file = start_file - 1; file < std::size(square); file++) {
+    for (int file = start_file - 1; file < std::size(square) && file <= start_file + 1; file++) {
         if (file < 0) {
             continue;
         }
@@ -1007,20 +989,35 @@ void ChessBoard::generateKingMoves(int start_file, int start_rank) {
             addMove(start_file, start_rank, start_file + 1, start_rank);
         }
     }
-
+    // Exclude castling moves if in check
+    if (inCheck(square[start_file][start_rank].color)) {
+        return;
+    }
     // Castling moves
     Piece::Color color = square[start_file][start_rank].color;
+    // Kingside castling
     if (color == Piece::Color::White && white_king_side_castle
         || color == Piece::Color::Black && black_king_side_castle) {
-        addMove(start_file, start_rank, start_file + 2, start_rank);
-        addMove(start_file, start_rank, start_file + 3, start_rank);
+        if (square[5][start_rank].type == Piece::Type::None
+            && square[6][start_rank].type == Piece::Type::None
+            && square[7][start_rank].type == Piece::Type::Rook
+            && square[7][start_rank].color == color) {
+            addMove(start_file, start_rank, start_file + 2, start_rank);
+            addMove(start_file, start_rank, start_file + 3, start_rank);
+        }
     }
+    // Queenside castling
     if (color == Piece::Color::White && white_queen_side_castle
         || color == Piece::Color::Black && black_queen_side_castle) {
-        addMove(start_file, start_rank, start_file - 2, start_rank);
-        addMove(start_file, start_rank, 0, start_rank);
+        if (square[1][start_rank].type == Piece::Type::None
+            && square[2][start_rank].type == Piece::Type::None
+            && square[3][start_rank].type == Piece::Type::None
+            && square[0][start_rank].type == Piece::Type::Rook
+            && square[0][start_rank].color == color) {
+            addMove(start_file, start_rank, start_file - 2, start_rank);
+            addMove(start_file, start_rank, 0, start_rank);
+        }
     }
-
 }
 
 bool ChessBoard::isLegalMove(const Move& move) const {
