@@ -323,31 +323,7 @@ void ChessBoard::selectPiece(const sf::Vector2f& mouse_position) {
             }
         }
         pawn_promotion = false;
-        // Next move
-        active_color = (active_color == Piece::Color::White) ? Piece::Color::Black : Piece::Color::White;
-        move_count++;
-        // Checking move
-        if (inCheck(active_color)) {
-            std::cout << ((active_color == Piece::Color::White) ? "White" : "Black") << " is in check!\n";
-            // Set check_square position
-            if (active_color == Piece::Color::White) {
-                check_square.setPosition(pieces[10][0].getPosition());
-            } else {
-                check_square.setPosition(pieces[11][0].getPosition());
-            }
-            check = true;
-        } else {
-            check = false;
-        }
-        generateMoves(active_color);
-        // Checkmate and stalemate
-        if (legalMoves.size() == 0) {
-            if (check) {
-                std::cout << "Checkmate! " << ((active_color == Piece::Color::White) ? "Black" : "White") << " wins!\n";
-            } else {
-                std::cout << "Stalemate! It's a draw!\n";
-            }
-        }
+        nextMove();
         return;
     }
 
@@ -425,31 +401,7 @@ void ChessBoard::dropPiece(const sf::Vector2f& mouse_position) {
         togglePawnPromotionMenu(active_color, file);
         return;
     }
-    // Next move
-    active_color = (active_color == Piece::Color::White) ? Piece::Color::Black : Piece::Color::White;
-    move_count++;
-    // Checking move
-    if (inCheck(active_color)) {
-        std::cout << ((active_color == Piece::Color::White) ? "White" : "Black") << " is in check!\n";
-        // Set check_square position
-        if (active_color == Piece::Color::White) {
-            check_square.setPosition(pieces[10][0].getPosition());
-        } else {
-            check_square.setPosition(pieces[11][0].getPosition());
-        }
-        check = true;
-    } else {
-        check = false;
-    }
-    generateMoves(active_color);
-    // Checkmate and stalemate
-    if (legalMoves.size() == 0) {
-        if (check) {
-            std::cout << "Checkmate! " << ((active_color == Piece::Color::White) ? "Black" : "White") << " wins!\n";
-        } else {
-            std::cout << "Stalemate! It's a draw!\n";
-        }
-    }
+    nextMove();
 }
 
 void ChessBoard::movePiece(int file, int rank, int new_file, int new_rank) {
@@ -574,6 +526,33 @@ void ChessBoard::movePiece(int file, int rank, int new_file, int new_rank) {
     }
 }
 
+void ChessBoard::nextMove() {
+    active_color = (active_color == Piece::Color::White) ? Piece::Color::Black : Piece::Color::White;
+    move_count++;
+    // Checking move
+    if (inCheck(active_color)) {
+        std::cout << ((active_color == Piece::Color::White) ? "White" : "Black") << " is in check!\n";
+        // Set check_square position
+        if (active_color == Piece::Color::White) {
+            check_square.setPosition(pieces[10][0].getPosition());
+        } else {
+            check_square.setPosition(pieces[11][0].getPosition());
+        }
+        check = true;
+    } else {
+        check = false;
+    }
+    generateMoves(active_color);
+    // Checkmate and stalemate
+    if (legalMoves.size() == 0) {
+        if (check) {
+            std::cout << "Checkmate! " << ((active_color == Piece::Color::White) ? "Black" : "White") << " wins!\n";
+        } else {
+            std::cout << "Stalemate! It's a draw!\n";
+        }
+    }
+}
+
 void ChessBoard::updateSpritePosition(int file, int rank, const sf::Vector2f& new_position) {
     if (file < 0 || file > 7 || rank < 0 || rank > 7) {
         return;
@@ -591,7 +570,7 @@ void ChessBoard::updateSpritePosition(int file, int rank, int new_file, int new_
                                               square_size.y * new_rank));
 }
 
-sf::Vector2i ChessBoard::findPieceSprite(int file, int rank) {
+sf::Vector2i ChessBoard::findPieceSprite(int file, int rank) const {
     sf::Vector2i indices(-1, -1);
     if (file < 0 || file > 7 || rank < 0 || rank > 7) {
         return indices;

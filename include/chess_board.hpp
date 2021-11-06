@@ -30,10 +30,12 @@ class ChessBoard : public sf::Drawable {
         void dropPiece(const sf::Vector2f& mouse_position);
         // Method used to find the indices of a piece's corresponding
         // sprite in the pieces array
-        sf::Vector2i findPieceSprite(int file, int rank);
+        sf::Vector2i findPieceSprite(int file, int rank) const;
         // Method used to move a piece and update their corresponding sprite's position
         // on the board
         void movePiece(int file, int rank, int new_file, int new_rank);
+        // Method used to update the board for the next move
+        void nextMove();
         // Overloaded method used to update a piece's sprite position on the board
         void updateSpritePosition(int file, int rank, int new_file, int new_rank);
         void updateSpritePosition(int file, int rank, const sf::Vector2f& new_position);
